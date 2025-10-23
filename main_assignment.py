@@ -35,12 +35,65 @@ x_test_flat=x_test_flat/255.0
 
 #MLP Model
 print("\n\nBuilding the MLP model...")
-model_mlp = keras.Sequential([
+model_mlp = keras.Sequential([  #Sequential model means layers are stacked one after another
     keras.layers.Input(shape=(3072,)), #Tells the model to expect a 1D vector with 3072 features (32*32*3)
 
+    #keras.layers.Dense(256, activation='relu'), #First hidden layer with 128 neurons and ReLU activation function
+    #keras.layers.Dense(128, activation='relu'), #Second hidden layer with 64 neurons and ReLU activation function
+    #keras.layers.Dense(32, activation='relu'),  #Third hidden layer with 32 neurons and ReLU activation function
     keras.layers.Dense(128, activation='relu'), #First hidden layer with 128 neurons and ReLU activation function
     keras.layers.Dense(64, activation='relu'), #Second hidden layer with 64 neurons and ReLU activation function
     keras.layers.Dense(10, activation='softmax') #Output layer with 10 neurons (one for each class) and softmax activation function (converts outputs into probabilities)
 ])
 
-model_mlp.summary()  #Prints a summary of the model architecture
+model_mlp.summary()  #Prints a summary of the model architecture  
+#In output Shape, None means batch size can be any number ,which means that it can accept any number of images at once
+#Parameters are the number of weights and biases that the model will learn during training,
+# in dense_2 its 64 inputs*10 neurons (this layers neurons) +10 biases (1 bias knob per neuron) =650
+# in dense_1 its 128 inputs*64 neurons +64 biases =8256
+# in dense its 3072 inputs*128 neurons +128 biases = 393344
+
+print("\nCompiling the MLP model...")
+
+model_mlp.compile(optimizer='adam',  #Adam optimizer is an efficient optimization algorithm that adjusts learning rates during training
+                    loss='sparse_categorical_crossentropy', #Loss function for multi-class classification problems (like our problem) where labels are integers
+                    metrics=['accuracy'])  #is to report accuracy as it trains
+
+
+print("\nTraining the MLP model...")
+NUM_EPOCHS = 20  #Number of times the model will go through the entire training dataset
+mlp_start_time = time.time()
+model_mlp.fit(x_train_flat, y_train_flat, epochs=NUM_EPOCHS, validation_data=(x_test_flat, y_test_flat))  
+#Training the model with training data and validating with test data after each epoch
+mlp_time_taken = time.time() - mlp_start_time
+print("\nMLP Total Training Time:", mlp_time_taken, "seconds")
+
+#First attempt 10 epochs took around 18 seconds ,the training (46.3%) and test (45.9%) accuracies are very close.
+#The model is underfitting ,we will increase the epochs.
+
+#Second attempt 20 epochs took around 37 seconds ,the training (50.3%) and test (48.3%) accuracies have started to diverge slightly.
+#That means that the model has started overfitting
+
+#Third attempt 50 epochs took around 105 seconds, the training (54%) and test (49%) accuracies have a 5% gap,
+# also the accuracy has barely improved, the model has hit a plateau and its overfitting.
+
+#I want to play with the model more, i will try increasing the number of neurons and layers.
+#Fourth attempt 20 epochs 2 hidden layers, one with 256 and one with 128 neurons took around 52 seconds,
+# the training (53.1%) and test (49.3%) accuracies still a big gap, not much improvement.
+
+#Fifth attempt 20 epochs 3 hidden layers, one with 256, one with 128 and one with 64 neurons took around 54 seconds,
+# the training (53.9%) and test (48.8%) accuracies ,worse than before, the model is overfitting more.
+
+
+# After multiple experiments (longer training, wider layers, deeper layers),
+# the MLP model consistently hits a "performance wall" at around 49-50% test accuracy.
+#
+# Any attempt to add more power to the model just results in OVERFITTING
+# (the training accuracy goes up, but the test accuracy does not).
+#
+# This strongly suggests the model is limited by the INPUT DATA:
+# The flattened 3072-D vector has lost all the spatial structure
+# (what pixels are "next to" each other) and is confused by background noise.
+#
+# To get a better score, we MUST use a model that understands
+# 2D image structure: a Convolutional Neural Network (CNN).
