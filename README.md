@@ -8,7 +8,37 @@ This is a project for the "Neural Networks – Deep Learning" course. The goal i
 3.  **Analysis:** Compare the Neural Network's performance against the baseline models.
 
 ---
+## 🚀 Setup and Installation
 
+To run this project on your own machine, follow these steps:
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/ChrysKoubanis/neural-networks-assignment-1.git](https://github.com/ChrysKoubanis/neural-networks-assignment-1.git)
+    cd neural-networks-assignment-1
+    ```
+
+2.  **Create and activate a virtual environment:**
+    ```bash
+    # Create the environment
+    python -m venv venv
+    
+    # Activate on Windows
+    .\venv\Scripts\activate
+    ```
+
+3.  **Install the required libraries:**
+    (This will install TensorFlow, scikit-learn, etc. from the `requirements.txt` file)
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Run the intermediate assignment script:**
+    ```bash
+    python intermediate_assignment.py
+    ```
+
+---
 ## 🛠️ Part 1: Intermediate Assignment (Baseline Models)
 
 In this part, we established baseline performance using classic machine learning classifiers. The data was flattened into 3072-dimension vectors and normalized.
