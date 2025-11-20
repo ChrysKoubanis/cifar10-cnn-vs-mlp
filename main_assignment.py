@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras 
-from tensorflow.keras import layers
+#from tensorflow.keras import layers
 import numpy as np
 import time
 
@@ -129,34 +129,48 @@ def CNN_model():
     #It will learn 32 different "filters" (32 "magnifying glasses").
     # (3,3)= Each filter is a 3x3 pixel grid.
     keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+    keras.layers.BatchNormalization(),
+    keras.layers.Activation('relu'),
     
     # 2. "MaxPooling2D" Layer:
-    #This SHRINKS (cuts height and width in half) the image to make it more manageable.
+    #This shrinks (cuts height and width in half) the image to make it more manageable.
     #It looks at 2x2 blocks of pixels and keeps only the biggest number ,to focus on the most important features.
     keras.layers.MaxPooling2D((2, 2)),
     
     # 3. Second "Conv2D" Layer:
     #We do it again. This layer learns to *combine* the simple features (like edges) from the first layer 
     #into more complex features (like corners or curves).
-    keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+    keras.layers.Conv2D(64, (3, 3), padding='same'),
+    keras.layers.BatchNormalization(),
+    keras.layers.Activation('relu'),
     
     # 4. Second "MaxPooling2D" Layer:
     #Shrinks it again.
     keras.layers.MaxPooling2D((2, 2)),
+
+    # 5. Third "Conv2D" Layer:
+    # It wll find more complex shapes (parts of objects) (Image size: 8x8)
+    # We double the filters again (from 64 to 128) to increase power.
+    # I wont use MAxpool because the image is already small (8x8).
+    keras.layers.Conv2D(128, (3, 3),  padding='same'),
+    keras.layers.BatchNormalization(),
+    keras.layers.Activation('relu'),
     
-    # 5. "Flatten" Layer:
+    # 6. "Flatten" Layer:
     #We're done finding features.Now we need to transition the data to a 1D "list" format
     #that a Dense layer can understand.
     keras.layers.Flatten(),
     
-    # 6. "Dense" Layer:
+    # 7. "Dense" Layer:
     #This is a "fully-connected" layer
     #It's the "brain" that will look at all the features the "eyes" found and start to make a decision.
-    keras.layers.Dense(64, activation='relu'),
+    keras.layers.Dense(64,),
+    keras.layers.BatchNormalization(),
+    keras.layers.Activation('relu'),
 
     keras.layers.Dropout(0.5), # Dropout layer to reduce overfitting by randomly turning off 50% of neurons during training
     
-    # 7. Output Layer:
+    # 8. Output Layer:
     #Softmax converts the scores into probabilities.
     keras.layers.Dense(10, activation='softmax')])
 
@@ -225,6 +239,11 @@ def CNN_model():
 #We can see that training for longer hurt the model, because we gave the model too much time and it started to memorize the training data again.
 #That means that at 15 epochs the model was at its best performance, underfitting but healthy gap.
 
-#I will return to 15 epochs and try to make the model more powerful, while keeping the dropout rate at 0.5 to decrease unoverfitting.
+#I will return to 15 epochs and try to make the model more powerful, while keeping the dropout rate at 0.5 to control overfitting.
+#To improve, we need a more powerful model that can learn more complex features.
+#Eighth attempt: I added a 3rd Conv2D layer with 128 filters to make the model more powerful because it was underfitting its potential.
+#Eighth attempt took around 144 seconds, with training accuracy of 81.22% and test accuracy of 74.08%. Test accuracy improved, but the gap is around 7%, so the model is overfitting again.
+#I will now add a batch normalization layer after each Conv2D layer to stabilize and speed up training.
+#Ninth attempt: I added batch normalization layers after each Conv2D layer.
 
 CNN_model()
