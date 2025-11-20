@@ -128,7 +128,7 @@ def CNN_model():
     #This is the "Feature Extractor" ,the "eyes"
     #It will learn 32 different "filters" (32 "magnifying glasses").
     # (3,3)= Each filter is a 3x3 pixel grid.
-    keras.layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+    keras.layers.Conv2D(32, (3, 3), padding='same'),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     
