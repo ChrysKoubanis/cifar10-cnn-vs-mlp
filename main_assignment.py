@@ -1,8 +1,10 @@
 import tensorflow as tf
 from tensorflow import keras 
 #from tensorflow.keras import layers
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()  #Loading the CIFAR-10 dataset
 
@@ -120,15 +122,24 @@ def CNN_model():
     #print("CNN data (x_train_cnn) shape:", x_train_cnn.shape)   #(50000, 32, 32, 3)
     #print("CNN labels (y_train) shape:", y_train.shape)         #(50000, 1)
     print("\n\nBuilding the CNN model...")
+
+    # 0. Data Augmentation Layer: 
+    #These layers run only during training, not during testing.
+    data_augmentation = keras.Sequential([
+        keras.layers.RandomFlip("horizontal"),
+        keras.layers.RandomRotation(0.1),
+        keras.layers.RandomZoom(0.1),
+    ])
+
     model_cnn = keras.Sequential([
         keras.layers.Input(shape=(32,32,3)) , #Input layer for our 3D images of size 32x32 with 3 colors
-        
+        data_augmentation,  
     
     # 1. First "Conv2D" Layer:
     #This is the "Feature Extractor" ,the "eyes"
     #It will learn 32 different "filters" (32 "magnifying glasses").
     # (3,3)= Each filter is a 3x3 pixel grid.
-    keras.layers.Conv2D(32, (3, 3), padding='same'),
+    keras.layers.Conv2D(64, (3, 3), padding='same'),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     
@@ -140,7 +151,7 @@ def CNN_model():
     # 3. Second "Conv2D" Layer:
     #We do it again. This layer learns to *combine* the simple features (like edges) from the first layer 
     #into more complex features (like corners or curves).
-    keras.layers.Conv2D(64, (3, 3), padding='same'),
+    keras.layers.Conv2D(128, (3, 3), padding='same'),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     
@@ -152,7 +163,7 @@ def CNN_model():
     # It wll find more complex shapes (parts of objects) (Image size: 8x8)
     # We double the filters again (from 64 to 128) to increase power.
     # I wont use MAxpool because the image is already small (8x8).
-    keras.layers.Conv2D(128, (3, 3),  padding='same'),
+    keras.layers.Conv2D(256, (3, 3),  padding='same'),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
     
@@ -164,7 +175,7 @@ def CNN_model():
     # 7. "Dense" Layer:
     #This is a "fully-connected" layer
     #It's the "brain" that will look at all the features the "eyes" found and start to make a decision.
-    keras.layers.Dense(64,),
+    keras.layers.Dense(128,),
     keras.layers.BatchNormalization(),
     keras.layers.Activation('relu'),
 
@@ -175,17 +186,25 @@ def CNN_model():
     keras.layers.Dense(10, activation='softmax')])
 
     model_cnn.summary()
-
+    optimizer = keras.optimizers.Adam(learning_rate=0.001) #we start with default learning rate and change it when it plateus
     print("\nCompiling the CNN model...")
     model_cnn.compile(
-        optimizer='adam', 
+        optimizer=optimizer, 
         loss='sparse_categorical_crossentropy',
         metrics=['accuracy']
     )
-    
+
+    #LR Scheduler callback to reduce learning rate when the model hits a plateau
+    lr_scheduler = ReduceLROnPlateau(
+        monitor='val_loss',    
+        factor=0.5,            #Reduces the learning rate by a factor of 0.5
+        patience=5,            #Waits for 3 epochs with no improvement
+        min_lr=0.00001,           #Minimum learning rate
+        verbose=1              #Prints a message when the learning rate is reduced
+    )
     
     print("\nTraining the CNN model...")
-    NUM_EPOCHS_CNN = 15
+    NUM_EPOCHS_CNN = 50
     
     cnn_start_time = time.time()
     
@@ -193,7 +212,8 @@ def CNN_model():
         x_train_cnn,
         y_train,
         epochs=NUM_EPOCHS_CNN,
-        validation_data=(x_test_cnn, y_test)
+        validation_data=(x_test_cnn, y_test),
+        callbacks=[lr_scheduler]  #Adding the LR scheduler callback
     )
     
     cnn_time_taken=time.time()-cnn_start_time
@@ -206,6 +226,38 @@ def CNN_model():
     
     print("Final CNN Training Accuracy:", round(final_train_acc * 100,2),"%")
     print("Final CNN Test (Validation) Accuracy: ",round(final_val_acc * 100,2),"%")
+
+    # Plotting training and validation accuracy and loss
+    acc = history_cnn.history['accuracy']
+    val_acc = history_cnn.history['val_accuracy']
+    loss = history_cnn.history['loss']
+    val_loss = history_cnn.history['val_loss']
+    epochs_range = range(len(acc))
+
+    plt.figure(figsize=(14, 6))
+
+    # Plot 1: Accuracy
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Training Accuracy')
+    plt.plot(epochs_range, val_acc, label='Validation (Test) Accuracy')
+    plt.legend(loc='lower right')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.grid(True)
+
+    # Plot 2: Loss
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Training Loss')
+    plt.plot(epochs_range, val_loss, label='Validation (Test) Loss')
+    plt.legend(loc='upper right')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
 
 #Starting architecure is: applying 32 filters, shrinking the image twice with max pooling, applying 64 filters, shrinking the image twice with max pooling,
 #flattening the image, one dense layer with 64 neurons and output layer for the 10 classes.I havent twicked the architecture yet. Epochs are set to 15.
@@ -245,5 +297,21 @@ def CNN_model():
 #Eighth attempt took around 144 seconds, with training accuracy of 81.22% and test accuracy of 74.08%. Test accuracy improved, but the gap is around 7%, so the model is overfitting again.
 #I will now add a batch normalization layer after each Conv2D layer to stabilize and speed up training.
 #Ninth attempt: I added batch normalization layers after each Conv2D layer.
+#Ninth attempt took around 196 seconds, with training accuracy of 88.39% and test accuracy of 75.56%. Test accuracy improved a bit, also on the 13th epoch we had 78.82% accuracy.
+#The drop from the 13th epoch to the 15th epoch could be because of the learning rate being too high.I will reduce it in the final attempt.
+#I also saw online that the ceiling of test accuracy for the CIFAR 10 dataset is around 78-79% for simple CNNs and i saw that with data augmentation and more complex architectures we can reach 85-90%.
+#Tenth attempt: Data augmentation creates "new" training data by slightly modifying existing images (flip them horizontally, zoom them a bit, rotate them).
+#This makes the model less likely to overfit and generalize better.
+#Tenth attempt took around 260 seconds, with training accuracy of 71.65% and test accuracy of 76.91%.This is the best and most balanced result so far.
+#Training accuuracy is lower than before because of data augmentation.
+#Test accuracy has better accuracy than Training accuracy because the training is harder because of the data augmentation and in Training where there is no data augmentation the model performs better.
+#Also i should add more epochs when using data augmentation because the model needs more time to learn the augmented data.
+#I will now try 50 epochs instead of 15
+#Eleventh attempt took around  855 seconds, with training accuracy of 78.63 % and test accuracy of 80.33%. Big increase in test accuracy.This is the best result so far, but i expected a bit more.
+#The validation accuracy is dropping big sometimes between epochs,that means that the learning rate is sligtly too high.
+#To fix this i will reduce the learning rate from default 0.001 to 0.0005 and use ReduceLROnPlateau callback to reduce it further if the model hits a plateau.
+#I know that this change wont make a big difference ,so i will also make the model wider by increasing the number of filters in the Conv2D layers.
+#Our current architecture is: 32 -> 64 -> 128 filters in Conv2D layers and i will change it to 64 -> 128 -> 256 filters.
+#This should provide a significant boost in the models performance.
 
 CNN_model()
