@@ -5,7 +5,7 @@ This is a project for the "Neural Networks – Deep Learning" course. The goal i
 
 1.  **Baseline Models:** Implement and test k-NN (k=1, k=3) and Nearest Class Centroid (NCC) classifiers.
 2.  **Main Assignment:** Build a Feedforward Neural Network (MLP or CNN) to solve the same problem.
-3.  **Analysis:** Compare the Neural Network's performance against the baseline models.
+3.  **Analysis:** Compare the Neural Network"s performance against the baseline models.
 
 ---
 ## 🚀 Setup and Installation
