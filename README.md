@@ -81,39 +81,18 @@ Flattening 32 x 32 x 3 image matrices into 1D vectors of 3,072 features strips l
 ## 🏗️ Final CNN Architecture
 
 
-
-```
-
 Input (32x32x3 RGB Image)
-
   │
-
   ├── Data Augmentation (Random Flip, Rotation, Zoom)
-
   │
-
   ├── Conv2D (64 filters, 3x3) ──► BatchNormalization ──► ReLU ──► MaxPooling2D (2x2)
-
   ├── Conv2D (128 filters, 3x3) ──► BatchNormalization ──► ReLU ──► MaxPooling2D (2x2)
-
   ├── Conv2D (256 filters, 3x3) ──► BatchNormalization ──► ReLU ──► MaxPooling2D (2x2)
-
   │
-
   ├── Flatten
-
   ├── Dense (128 units, ReLU)
-
   ├── Dropout (0.5)
-
   └── Dense (10 units, Softmax Output)
-
-```
-
-
-
----
-
 
 
 ## 🛠️ Setup & Execution
@@ -134,8 +113,7 @@ Input (32x32x3 RGB Image)
 
    ```bash
 
-   git clone https://github.com/your-username/cifar10-cnn-vs-mlp.git
-
+   git clone git clone https://github.com/ChrysKoubanis/cifar10-cnn-vs-mlp.git
    cd cifar10-cnn-vs-mlp
 
    ```
