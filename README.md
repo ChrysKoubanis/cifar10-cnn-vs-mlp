@@ -50,6 +50,11 @@ While flattening 2D/3D image spatial structures causes dense Multi-Layer Percept
 
 ---
 
+## 📈 Convergence & Learning Curves
+
+![Training and Validation Performance](Figure_1%20CNN.png)[cite: 20]
+
+---
 
 
 ## 🔬 Key Engineering Insights & Empirical Iteration
