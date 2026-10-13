@@ -1,62 +1,165 @@
-# Project: Image Classification with Neural Networks
-This is a project for the "Neural Networks – Deep Learning" course. The goal is to build and evaluate models for classifying images from the **CIFAR-10** dataset.
+# CIFAR-10 Image Classification: MLP Baseline vs. Optimized CNN
 
-## 🎯 Project Goal
 
-1.  **Baseline Models:** Implement and test k-NN (k=1, k=3) and Nearest Class Centroid (NCC) classifiers.
-2.  **Main Assignment:** Build a Feedforward Neural Network (MLP or CNN) to solve the same problem.
-3.  **Analysis:** Compare the Neural Network"s performance against the baseline models.
 
----
-## 🚀 Setup and Installation
+An empirical benchmark evaluating spatial feature representations in Deep Learning by comparing Multi-Layer Perceptrons (MLPs) with regularized Convolutional Neural Networks (CNNs) on the CIFAR-10 image dataset.
 
-To run this project on your own machine, follow these steps:
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/ChrysKoubanis/neural-networks-assignment-1.git](https://github.com/ChrysKoubanis/neural-networks-assignment-1.git)
-    cd neural-networks-assignment-1
-    ```
-
-2.  **Create and activate a virtual environment:**
-    ```bash
-    # Create the environment
-    python -m venv venv
-    
-    # Activate on Windows
-    .\venv\Scripts\activate
-    ```
-
-3.  **Install the required libraries:**
-    (This will install TensorFlow, scikit-learn, etc. from the `requirements.txt` file)
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Run the intermediate assignment script:**
-    ```bash
-    python intermediate_assignment.py
-    ```
-
----
-## 🛠️ Part 1: Intermediate Assignment (Baseline Models)
-
-In this part, we established baseline performance using classic machine learning classifiers. The data was flattened into 3072-dimension vectors and normalized.
-
-The models were trained and tested on the **full CIFAR-10 dataset** (50,000 train, 10,000 test images).
-
-### Baseline Results
-
-| Classifier | Parameters | Accuracy | Time (seconds) |
-| :--- | :--- | :--- | :--- |
-| **Nearest Class Centroid (NCC)** | - | 27.74% | ~2.75 sec |
-| **k-Nearest Neighbors (k-NN)** | `k=1` | **35.39%** | ~11.12 sec |
-| **k-Nearest Neighbors (k-NN)** | `k=3` | 33.03% | ~10.88 sec |
-
-**Conclusion:** The best-performing baseline model is **k-NN (k=1)**, with **35.39%** accuracy.
 
 ---
 
-## 🧠 Part 2: Main Assignment (Neural Network)
 
-*(This section will be updated after the main assignment is complete.)*
+
+## 📌 Project Overview
+
+
+
+This repository demonstrates how architectural choices and regularization techniques directly impact an image classifier's ability to generalize to unseen data. 
+
+
+
+While flattening 2D/3D image spatial structures causes dense Multi-Layer Perceptrons to hit an upper performance ceiling at ~49% accuracy, an iteratively optimized CNN leveraging Batch Normalization, Data Augmentation, Dropout, and Learning Rate Scheduling achieves 84.68% accuracy on the test set with minimal overfitting.
+
+
+
+---
+
+
+
+## 📊 Performance Summary
+
+
+
+| Model | Model Architecture / Techniques | Training Time | Test Accuracy | Overfitting Gap | Key Observation |
+
+| :--- | :--- | :--- | :--- | :--- | :--- |
+
+| **NCC Baseline** | Nearest Class Center | ~2.6s | **27.74%** | — | Primitive baseline benchmark |
+
+| **k-NN (k=1)** | Instance-based Non-parametric | ~13.0s | **35.39%** | — | High inference latency |
+
+| **k-NN (k=3)** | Instance-based Non-parametric | ~13.0s | **33.03%** | — | Sensitive to background noise |
+
+| **Baseline MLP** | 2 Hidden Layers (128 -> 64) | ~52.0s | **49.30%** | ~3.8% | Performance cap due to spatial flattening |
+
+| **Baseline CNN** | 2 Conv Blocks (32 -> 64 filters) | ~75.0s | **69.73%** | ~20.1% | Severe overfitting without regularization |
+
+| **Optimized CNN** | 3 Conv Blocks + BatchNorm + Augmentation + LR Scheduler | ~2052.0s | **84.68%** | ~3.4% | High test performance and strong generalization |
+
+
+
+---
+
+
+
+## 🔬 Key Engineering Insights & Empirical Iteration
+
+
+
+### 1. Spatial Structure Loss in MLPs
+
+Flattening 32 x 32 x 3 image matrices into 1D vectors of 3,072 features strips localized spatial proximity (pixel neighborhood context). Scaling network width (adding hidden units) or depth only accelerated overfitting without surpassing the ~49% test accuracy barrier.
+
+
+
+### 2. Systematic Regularization of the CNN
+
+* **Addressing Severe Overfitting:** The baseline CNN reached 89.86% training accuracy but only 69.73% test accuracy (a 20% gap).
+
+* **Dropout Optimization:** Adding a Dropout(0.5) layer before the output classification head closed the generalization gap down to ~1%.
+
+* **Batch Normalization & Capacity Expansion:** Scaling to 3 Conv blocks (64 -> 128 -> 256 filters) with BatchNormalization stabilized activation distributions and sped up convergence.
+
+* **Data Augmentation & Dynamic LR:** Applying random horizontal flips, rotations, and zooms alongside Keras's ReduceLROnPlateau callback allowed the model to reach its peak test performance of 84.68% over 50 training epochs.
+
+
+
+---
+
+
+
+## 🏗️ Final CNN Architecture
+
+
+
+```
+
+Input (32x32x3 RGB Image)
+
+  │
+
+  ├── Data Augmentation (Random Flip, Rotation, Zoom)
+
+  │
+
+  ├── Conv2D (64 filters, 3x3) ──► BatchNormalization ──► ReLU ──► MaxPooling2D (2x2)
+
+  ├── Conv2D (128 filters, 3x3) ──► BatchNormalization ──► ReLU ──► MaxPooling2D (2x2)
+
+  ├── Conv2D (256 filters, 3x3) ──► BatchNormalization ──► ReLU ──► MaxPooling2D (2x2)
+
+  │
+
+  ├── Flatten
+
+  ├── Dense (128 units, ReLU)
+
+  ├── Dropout (0.5)
+
+  └── Dense (10 units, Softmax Output)
+
+```
+
+
+
+---
+
+
+
+## 🛠️ Setup & Execution
+
+
+
+### Prerequisites
+
+* Python 3.9+
+
+* TensorFlow 2.x / Keras
+
+
+
+### Running the Code
+
+1. Clone the repository:
+
+   ```bash
+
+   git clone https://github.com/your-username/cifar10-cnn-vs-mlp.git
+
+   cd cifar10-cnn-vs-mlp
+
+   ```
+
+
+
+2. Execute the evaluation script:
+
+   ```bash
+
+   python main_assignment.py
+
+   ```
+
+
+
+---
+
+
+
+## 🧰 Technologies & Tools
+
+
+
+* **Core Framework:** Python, TensorFlow / Keras
+
+* **Data Processing & Analytics:** NumPy, Matplotlib
