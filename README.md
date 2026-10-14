@@ -106,10 +106,7 @@ Input (32x32x3 RGB Image)
 
 ### Prerequisites
 
-* Python 3.9+
-
-* TensorFlow 2.x / Keras
-
+* Python 3.11+
 
 
 ### Running the Code
@@ -118,14 +115,31 @@ Input (32x32x3 RGB Image)
 
    ```bash
 
-   git clone git clone https://github.com/ChrysKoubanis/cifar10-cnn-vs-mlp.git
+   git clone https://github.com/ChrysKoubanis/cifar10-cnn-vs-mlp.git
    cd cifar10-cnn-vs-mlp
 
    ```
 
+2. Create and activate a virtual environment:
+
+   ```bash
+
+   Windows:
+      python -m venv venv
+      .\venv\Scripts\activate
+
+   ```
+
+3. Install required dependencies:
+
+   ```bash
+
+   pip install -r requirements.txt
+
+   ```
 
 
-2. Execute the evaluation script:
+4. Execute the evaluation script:
 
    ```bash
 
